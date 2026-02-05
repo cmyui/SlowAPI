@@ -56,7 +56,7 @@
 //=============================================================================
 .equ ROUTE_PATH,      0     // 8 bytes: pointer to path string
 .equ ROUTE_PATH_LEN,  8     // 4 bytes: path length
-.equ ROUTE_METHODS,   12    // 4 bytes: method bitmask
+.equ ROUTE_METHODS,   12    // 4 bytes: method constant
 .equ ROUTE_HANDLER,   16    // 8 bytes: pointer to handler
 .equ ROUTE_SIZE,      24
 
@@ -89,7 +89,7 @@
 .Lroute_\@:
     .quad .Lpath_\@                         // path pointer
     .word .Lpath_end_\@ - .Lpath_\@ - 1     // path length (excluding null)
-    .word \methods                          // methods bitmask
+    .word \methods                          // method constant
     .quad .Lhandler_\@                      // handler pointer
 
     .popsection

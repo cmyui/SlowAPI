@@ -282,12 +282,6 @@ test_method_constants:
     ldr x2, =name_method_post_const
     bl test_assert_eq
 
-    // GET | POST should be 0x03
-    mov x0, #(METHOD_GET | METHOD_POST)
-    mov x1, #0x03
-    ldr x2, =name_method_combo
-    bl test_assert_eq
-
     ldp x29, x30, [sp], #16
     ret
 
@@ -326,8 +320,6 @@ name_method_get_const:
     .asciz "METHOD_GET is 0x01"
 name_method_post_const:
     .asciz "METHOD_POST is 0x02"
-name_method_combo:
-    .asciz "METHOD_GET|POST is 0x03"
 
 // Test HTTP requests
 test_get_request:

@@ -52,21 +52,9 @@ handler_health:
     mov x1, #2
     b resp_text
 
-// GET|POST /api/data - Multiple methods on same route
-ENDPOINT (METHOD_GET | METHOD_POST), "/api/data"
+// POST /api/data - Create data endpoint
+ENDPOINT METHOD_POST, "/api/data"
 handler_data:
-    ldr w1, [x0, #REQ_METHOD]
-    cmp w1, #METHOD_POST
-    b.eq .data_post
-
-    // GET - return current data
-    ldr x0, =json_data
-    ldr x1, =json_data_len
-    ldr w1, [x1]
-    b resp_json
-
-.data_post:
-    // POST - acknowledge receipt
     mov w0, #STATUS_CREATED
     ldr x1, =json_created
     ldr x2, =json_created_len
@@ -116,10 +104,6 @@ json_info:
     .ascii "\"features\":[\"routing\",\"content-types\",\"method-dispatch\"]}"
 json_info_end:
 
-json_data:
-    .ascii "{\"items\":[1,2,3],\"count\":3}"
-json_data_end:
-
 json_created:
     .ascii "{\"status\":\"created\"}"
 json_created_end:
@@ -142,7 +126,5 @@ html_index_len:
     .word html_index_end - html_index
 json_info_len:
     .word json_info_end - json_info
-json_data_len:
-    .word json_data_end - json_data
 json_created_len:
     .word json_created_end - json_created

@@ -73,9 +73,9 @@ slowapi_dispatch:
     // Path matches! Set flag
     mov w25, #1
 
-    // Check if method is allowed
-    and w4, w22, w2
-    cbz w4, .next_route     // Method not in bitmask
+    // Check if method matches
+    cmp w22, w2
+    b.ne .next_route
 
     // Match found! Call handler with request context in x0
     mov x0, x19
