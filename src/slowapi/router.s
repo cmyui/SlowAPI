@@ -1,6 +1,8 @@
 // SlowAPI Router
 // Route matching and dispatch
 
+.include "src/config.s"
+
 .section .text
 .global slowapi_dispatch
 
@@ -23,11 +25,12 @@ slowapi_dispatch:
     ldr w21, [x19, #REQ_PATH_LEN]   // path length
     ldr w22, [x19, #REQ_METHOD]     // method
 
-    // Debug: print dispatch info
+.if DEBUG
     stp x19, x20, [sp, #-16]!
     ldr x0, =msg_dispatch
     bl uart_puts
     ldp x19, x20, [sp], #16
+.endif
 
     // Get route table bounds
     ldr x23, =__routes_start
@@ -77,11 +80,12 @@ slowapi_dispatch:
     // Match found! Call handler with request context in x0
     mov x0, x19
 
-    // Debug: print calling handler
+.if DEBUG
     stp x0, x3, [sp, #-16]!
     ldr x0, =msg_handler
     bl uart_puts
     ldp x0, x3, [sp], #16
+.endif
 
     blr x3
 
@@ -113,8 +117,10 @@ slowapi_dispatch:
     ldp x29, x30, [sp], #16
     ret
 
+.if DEBUG
 .section .rodata
 msg_dispatch:
     .asciz "[ROUTER] "
 msg_handler:
     .asciz "->handler "
+.endif

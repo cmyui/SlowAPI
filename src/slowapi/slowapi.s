@@ -1,6 +1,8 @@
 // SlowAPI Framework Core
 // Main entry point and initialization
 
+.include "src/config.s"
+
 .section .text
 .global slowapi_init
 .global slowapi_handle
@@ -14,6 +16,7 @@ slowapi_init:
     stp x29, x30, [sp, #-16]!
     mov x29, sp
 
+.if DEBUG
     // Print init message
     ldr x0, =msg_init
     bl uart_puts
@@ -30,6 +33,7 @@ slowapi_init:
     bl uart_print_hex8
     ldr x0, =msg_routes
     bl uart_puts
+.endif
 
     ldp x29, x30, [sp], #16
     ret
@@ -45,12 +49,13 @@ slowapi_handle:
     mov x19, x0             // raw data
     mov x20, x1             // length
 
-    // Debug: print received request
+.if DEBUG
     ldr x0, =msg_request
     bl uart_puts
     mov w0, w20
     bl uart_print_hex16
     bl uart_newline
+.endif
 
     // Parse request into context
     ldr x2, =request_ctx
@@ -62,7 +67,7 @@ slowapi_handle:
     cmp w0, #0
     b.ne .parse_failed
 
-    // Debug: print parsed path
+.if DEBUG
     ldr x0, =msg_path
     bl uart_puts
 
@@ -82,6 +87,7 @@ slowapi_handle:
 
 .path_printed:
     bl uart_newline
+.endif
 
     // Dispatch to router
     ldr x0, =request_ctx
@@ -186,6 +192,7 @@ http_check_complete:
 // Data
 //=============================================================================
 
+.if DEBUG
 .section .rodata
 msg_init:
     .asciz "[SlowAPI] init "
@@ -195,6 +202,9 @@ msg_request:
     .asciz "[SlowAPI] req len="
 msg_path:
     .asciz "[SlowAPI] path="
+.endif
+
+.section .rodata
 msg_parse_fail:
     .asciz "[SlowAPI] parse failed\n"
 

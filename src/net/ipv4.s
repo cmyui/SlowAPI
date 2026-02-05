@@ -1,3 +1,5 @@
+.include "src/config.s"
+
 .section .text
 .global ip_recv
 .global ip_send
@@ -51,11 +53,12 @@ ip_recv:
     bl ip_checksum
     cbz w0, .cksum_ok
 
-    // Debug: checksum failed
+.if DEBUG
     stp x19, x20, [sp, #-16]!
     ldr x0, =msg_cksum_fail
     bl uart_puts
     ldp x19, x20, [sp], #16
+.endif
     b .ip_recv_done
 
 .cksum_ok:
@@ -84,7 +87,7 @@ ip_recv:
     b .ip_recv_done
 
 .dispatch_tcp:
-    // Debug: print before tcp_handle
+.if DEBUG
     stp x0, x1, [sp, #-16]!
     stp x2, x3, [sp, #-16]!
     stp x19, x22, [sp, #-16]!
@@ -93,6 +96,7 @@ ip_recv:
     ldp x19, x22, [sp], #16
     ldp x2, x3, [sp], #16
     ldp x0, x1, [sp], #16
+.endif
 
     mov x2, x22             // source IP
     mov x3, x19             // IP header (for pseudo-header)
@@ -315,6 +319,7 @@ ip_memcpy:
 .ip_memcpy_done:
     ret
 
+.if DEBUG
 .section .rodata
 msg_tcp_dispatch:
     .asciz "->TCP "
@@ -322,6 +327,7 @@ msg_cksum_fail:
     .asciz "CKSUM!"
 msg_before_store:
     .asciz "ip="
+.endif
 
 .section .bss
 .balign 8

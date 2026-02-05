@@ -1,3 +1,5 @@
+.include "src/config.s"
+
 .section .text
 .global eth_send
 .global eth_recv
@@ -93,7 +95,7 @@ eth_recv:
     mov x19, x0             // frame pointer
     mov x20, x1             // frame length
 
-    // Debug: print frame length and first bytes
+.if DEBUG
     stp x0, x1, [sp, #-16]!
     ldr x0, =msg_eth_recv
     bl uart_puts
@@ -122,6 +124,7 @@ eth_recv:
     bl uart_print_hex8
     bl uart_newline
     ldp x0, x1, [sp], #16
+.endif
 
     // Check minimum length
     cmp x20, #ETH_HEADER_SIZE
@@ -151,22 +154,26 @@ eth_recv:
     b .eth_recv_done
 
 .dispatch_arp:
+.if DEBUG
     stp x0, x1, [sp, #-16]!
     stp x2, xzr, [sp, #-16]!
     ldr x0, =msg_arp
     bl uart_puts
     ldp x2, xzr, [sp], #16
     ldp x0, x1, [sp], #16
+.endif
     bl arp_handle
     b .eth_recv_done
 
 .dispatch_ipv4:
+.if DEBUG
     stp x0, x1, [sp, #-16]!
     stp x2, xzr, [sp, #-16]!
     ldr x0, =msg_ipv4
     bl uart_puts
     ldp x2, xzr, [sp], #16
     ldp x0, x1, [sp], #16
+.endif
     bl ip_recv
     b .eth_recv_done
 
@@ -176,6 +183,7 @@ eth_recv:
     ldp x29, x30, [sp], #16
     ret
 
+.if DEBUG
 .section .rodata
 msg_arp:
     .asciz "ARP "
@@ -183,3 +191,4 @@ msg_ipv4:
     .asciz "IPv4 "
 msg_eth_recv:
     .asciz "ETH len="
+.endif
