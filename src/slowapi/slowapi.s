@@ -7,6 +7,7 @@
 .global slowapi_init
 .global slowapi_handle
 .global tcp_app_handler
+.global http_check_complete
 
 .include "src/slowapi/macros.s"
 

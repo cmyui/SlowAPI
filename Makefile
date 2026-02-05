@@ -37,7 +37,13 @@ TEST_SRCS = src/test/test_main.s \
             src/test/test_ipv4.s \
             src/test/test_tcp.s \
             src/test/test_http.s \
-            $(COMMON_SRCS)
+            src/test/test_slowapi.s \
+            $(COMMON_SRCS) \
+            src/slowapi/request.s \
+            src/slowapi/response.s \
+            src/slowapi/router.s \
+            src/slowapi/slowapi.s \
+            src/app.s
 TEST_OBJS = $(TEST_SRCS:.s=.o)
 
 # Flags
@@ -78,7 +84,7 @@ test: $(TEST_ELF)
 		-machine virt \
 		-cpu cortex-a72 \
 		-nographic \
-		-global virtio-mmio.force-legacy=false \
+		-global virtio-mmio.force-legacy=true \
 		-kernel $(TEST_ELF) \
 		-device virtio-net-device,netdev=net0 \
 		-netdev user,id=net0

@@ -19,6 +19,7 @@ _start:
     bl run_ipv4_tests
     bl run_tcp_tests
     bl run_http_tests
+    bl run_slowapi_tests
 
     // Print summary and halt
     bl test_end

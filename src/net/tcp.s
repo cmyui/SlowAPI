@@ -5,6 +5,10 @@
 .global tcp_send
 .global tcp_state
 .global tcp_listen_port
+.global tcp_buffer_append
+.global tcp_buffer_reset
+.global tcp_rx_buffer
+.global tcp_rx_buffer_len
 
 // TCP header offsets
 .equ TCP_SRC_PORT,    0
