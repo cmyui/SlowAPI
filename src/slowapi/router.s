@@ -1,5 +1,5 @@
 // SlowAPI Router
-// Route matching and dispatch
+// Route matching and dispatch with path parameter support
 
 .include "src/config.s"
 
@@ -17,6 +17,8 @@ slowapi_dispatch:
     stp x19, x20, [sp, #-16]!
     stp x21, x22, [sp, #-16]!
     stp x23, x24, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+    stp x27, x28, [sp, #-16]!
 
     mov x19, x0             // request context
 
@@ -24,6 +26,10 @@ slowapi_dispatch:
     ldr x20, [x19, #REQ_PATH]       // path pointer
     ldr w21, [x19, #REQ_PATH_LEN]   // path length
     ldr w22, [x19, #REQ_METHOD]     // method
+
+    // Clear path param fields
+    str xzr, [x19, #REQ_PATH_PARAM]
+    str wzr, [x19, #REQ_PATH_PARAM_LEN]
 
 .if DEBUG
     stp x19, x20, [sp, #-16]!
@@ -44,40 +50,30 @@ slowapi_dispatch:
     b.ge .no_route_match
 
     // Load route entry
-    ldr x0, [x23, #ROUTE_PATH]      // route path ptr
-    ldr w1, [x23, #ROUTE_PATH_LEN]  // route path len
-    ldr w2, [x23, #ROUTE_METHODS]   // route methods
-    ldr x3, [x23, #ROUTE_HANDLER]   // route handler
+    ldr x26, [x23, #ROUTE_PATH]      // route path ptr
+    ldr w27, [x23, #ROUTE_PATH_LEN]  // route path len
+    ldr w28, [x23, #ROUTE_METHODS]   // route methods
 
-    // Compare path lengths first
-    cmp w1, w21
-    b.ne .next_route
+    // Try to match this route (handles both static and parameterized routes)
+    mov x0, x20             // request path
+    mov w1, w21             // request path length
+    mov x2, x26             // route path
+    mov w3, w27             // route path length
+    mov x4, x19             // request context (for storing path param)
+    bl match_route
 
-    // Compare paths
-    mov x4, x0              // route path
-    mov x5, x20             // request path
-    mov w6, w1              // length
+    // x0 = 1 if matched, 0 otherwise
+    cbz x0, .next_route
 
-.path_cmp:
-    cbz w6, .path_match
-
-    ldrb w7, [x4], #1
-    ldrb w8, [x5], #1
-    cmp w7, w8
-    b.ne .next_route
-
-    sub w6, w6, #1
-    b .path_cmp
-
-.path_match:
     // Path matches! Set flag
     mov w25, #1
 
     // Check if method matches
-    cmp w22, w2
+    cmp w22, w28
     b.ne .next_route
 
     // Match found! Call handler with request context in x0
+    ldr x3, [x23, #ROUTE_HANDLER]
     mov x0, x19
 
 .if DEBUG
@@ -111,6 +107,120 @@ slowapi_dispatch:
     bl resp_error
 
 .dispatch_done:
+    ldp x27, x28, [sp], #16
+    ldp x25, x26, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
+    ret
+
+// match_route: Match request path against route pattern
+// Supports path parameters like /api/hotels/{id}
+// Input: x0 = request path, w1 = request path length
+//        x2 = route pattern, w3 = route pattern length
+//        x4 = request context (to store extracted param)
+// Output: x0 = 1 if match, 0 if no match
+match_route:
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+
+    mov x19, x0             // request path
+    mov w20, w1             // request path length
+    mov x21, x2             // route pattern
+    mov w22, w3             // route pattern length
+    mov x23, x4             // request context
+
+    mov w24, #0             // request path index
+    mov w25, #0             // route pattern index
+
+.match_loop:
+    // Check if we've consumed both strings
+    cmp w25, w22
+    b.ge .check_req_end
+
+    // Get current route char
+    ldrb w0, [x21, x25]
+
+    // Check for '{' - start of parameter
+    cmp w0, #'{'
+    b.eq .match_param
+
+    // Check if we still have request chars
+    cmp w24, w20
+    b.ge .no_match
+
+    // Compare characters
+    ldrb w1, [x19, x24]
+    cmp w0, w1
+    b.ne .no_match
+
+    // Advance both
+    add w24, w24, #1
+    add w25, w25, #1
+    b .match_loop
+
+.match_param:
+    // Found '{', find matching '}'
+    mov w26, w25            // start of {
+    add w25, w25, #1        // skip '{'
+
+.find_close_brace:
+    cmp w25, w22
+    b.ge .no_match          // malformed pattern
+
+    ldrb w0, [x21, x25]
+    cmp w0, #'}'
+    b.eq .found_close_brace
+
+    add w25, w25, #1
+    b .find_close_brace
+
+.found_close_brace:
+    add w25, w25, #1        // skip '}'
+
+    // Now extract the path parameter value
+    // It runs from w24 to either end of string or next '/'
+    mov w26, w24            // param start in request
+
+.find_param_end:
+    cmp w24, w20
+    b.ge .param_end_found
+
+    ldrb w0, [x19, x24]
+    cmp w0, #'/'
+    b.eq .param_end_found
+
+    add w24, w24, #1
+    b .find_param_end
+
+.param_end_found:
+    // Store path param: pointer and length
+    add x0, x19, x26        // param pointer
+    str x0, [x23, #REQ_PATH_PARAM]
+    sub w0, w24, w26        // param length
+    str w0, [x23, #REQ_PATH_PARAM_LEN]
+
+    b .match_loop
+
+.check_req_end:
+    // Route pattern consumed, check if request path is also consumed
+    cmp w24, w20
+    b.ne .no_match
+
+    // Full match!
+    mov x0, #1
+    b .match_done
+
+.no_match:
+    mov x0, #0
+
+.match_done:
+    ldp x25, x26, [sp], #16
     ldp x23, x24, [sp], #16
     ldp x21, x22, [sp], #16
     ldp x19, x20, [sp], #16

@@ -13,6 +13,9 @@ _start:
     // Initialize UART
     bl uart_init
 
+    // Initialize memory allocator (foundational - must be early)
+    bl mem_init
+
     // Print boot message
     ldr x0, =boot_msg
     bl uart_puts

@@ -30,17 +30,19 @@
 .equ STATUS_SERVER_ERROR, 500
 
 //=============================================================================
-// Request Context Offsets (64 bytes)
+// Request Context Offsets (80 bytes)
 //=============================================================================
-.equ REQ_METHOD,      0     // 4 bytes: METHOD_GET, METHOD_POST, etc.
-.equ REQ_PATH,        8     // 8 bytes: pointer to path string
-.equ REQ_PATH_LEN,    16    // 4 bytes: path length
-.equ REQ_QUERY,       24    // 8 bytes: pointer to query string (after ?)
-.equ REQ_QUERY_LEN,   32    // 4 bytes: query string length
-.equ REQ_BODY,        40    // 8 bytes: pointer to body data
-.equ REQ_BODY_LEN,    48    // 4 bytes: body length
-.equ REQ_HEADERS,     56    // 8 bytes: pointer to headers section
-.equ REQ_SIZE,        64
+.equ REQ_METHOD,         0     // 4 bytes: METHOD_GET, METHOD_POST, etc.
+.equ REQ_PATH,           8     // 8 bytes: pointer to path string
+.equ REQ_PATH_LEN,       16    // 4 bytes: path length
+.equ REQ_QUERY,          24    // 8 bytes: pointer to query string (after ?)
+.equ REQ_QUERY_LEN,      32    // 4 bytes: query string length
+.equ REQ_BODY,           40    // 8 bytes: pointer to body data
+.equ REQ_BODY_LEN,       48    // 4 bytes: body length
+.equ REQ_HEADERS,        56    // 8 bytes: pointer to headers section
+.equ REQ_PATH_PARAM,     64    // 8 bytes: pointer to path param value
+.equ REQ_PATH_PARAM_LEN, 72    // 4 bytes: path param length
+.equ REQ_SIZE,           80
 
 //=============================================================================
 // Response Context Offsets (32 bytes)

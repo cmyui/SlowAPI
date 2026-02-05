@@ -17,15 +17,21 @@ COMMON_SRCS = src/drivers/uart.s \
               src/net/tcp.s \
               src/net/http.s
 
+# Memory and database sources
+MEM_DB_SRCS = src/mem/slab.s \
+              src/db/db.s
+
 # SlowAPI framework sources
 SLOWAPI_SRCS = src/slowapi/request.s \
                src/slowapi/response.s \
                src/slowapi/router.s \
+               src/slowapi/query.s \
+               src/slowapi/json.s \
                src/slowapi/slowapi.s \
                src/app.s
 
 # Server sources
-SERVER_SRCS = src/boot.s $(COMMON_SRCS) $(SLOWAPI_SRCS)
+SERVER_SRCS = src/boot.s $(COMMON_SRCS) $(MEM_DB_SRCS) $(SLOWAPI_SRCS)
 SERVER_OBJS = $(SERVER_SRCS:.s=.o)
 
 # Test sources
@@ -38,10 +44,17 @@ TEST_SRCS = src/test/test_main.s \
             src/test/test_tcp.s \
             src/test/test_http.s \
             src/test/test_slowapi.s \
+            src/test/test_slab.s \
+            src/test/test_db.s \
+            src/test/test_query.s \
+            src/test/test_json.s \
             $(COMMON_SRCS) \
+            $(MEM_DB_SRCS) \
             src/slowapi/request.s \
             src/slowapi/response.s \
             src/slowapi/router.s \
+            src/slowapi/query.s \
+            src/slowapi/json.s \
             src/slowapi/slowapi.s \
             src/app.s
 TEST_OBJS = $(TEST_SRCS:.s=.o)

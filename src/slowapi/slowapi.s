@@ -12,10 +12,13 @@
 .include "src/slowapi/macros.s"
 
 // slowapi_init: Initialize the framework
-// Called at boot to prepare route table
+// Called at boot to prepare route table and database
 slowapi_init:
     stp x29, x30, [sp, #-16]!
     mov x29, sp
+
+    // Initialize the database
+    bl db_init
 
 .if DEBUG
     // Print init message
